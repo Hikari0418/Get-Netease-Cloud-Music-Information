@@ -1,0 +1,96 @@
+<input type="text" id="field1" value="请输入歌曲的网易云id" onclick="inputclk()">
+<p><br></p>
+<button onclick="Get163()">获取信息</button>
+<p><br></p>
+<p id="163player">
+Tips：电脑端或者手机端点击分享，选择复制链接，随便找个地方粘贴出来，<br>例如：电脑端：http://music.163.com/song?id=27599724&amp;userid=530230362，<br>song?id=后面的数字27599724就是这首歌的网易云id，手机端：分享何洁/赫<br>子铭的单曲《经过（对唱版）》：http://music.163.com/song/27599724/?us<br>erid=530230362（来自@网易云音乐），song/右边的数字27599724就是这首<br>歌的网易云id。
+</p>
+<p><br></p>
+<img id="imgbox" alt="封面图片" style="visibility:hidden">
+<p><br></p>
+<p id="163player2"></p>
+<p><br></p>
+<button id="playonline" style="visibility:hidden" onclick="playclk()">试听</button>
+
+<script>
+function fetch163Songs(IDS) {
+  return new Promise(function (ok, err) {
+    var ids;
+    switch (typeof IDS) {
+      case 'number':
+      ids = [IDS];
+      break;
+      case 'object':
+        if (!Array.isArray(IDS)) {
+          err(new Error("Please enter array or number"));
+        }
+        ids = IDS;
+        break;
+      default:
+        err(new Error("Please enter array or number"));
+        break;
+    }  
+    fetch("https://v1.hitokoto.cn/nm/summary/" + ids + "?lyric=true&common=true")
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        var songs = [];
+        data.songs.map(function (song) {
+          songs.push(
+            song.name, 
+            song.artists.join("/"),
+            song.album.name,
+            song.album.picture,
+            song.url,
+            song.lyric.base,
+            song.lyric.translate, 
+          );
+        });
+        return songs;
+      })
+      .then(function (result) {
+        ok(result);
+      })
+      .catch(function (e) {
+        err(e);
+      });
+  });
+}
+function Get163()
+{
+var netease = document.getElementById('163player');
+var netease2 = document.getElementById('163player2'); 
+var songid = document.getElementById('field1');
+	fetch163Songs(parseInt(songid.value))
+  .then(function (data) {
+imgurl = data[3];
+songurl = data[4];
+    netease.innerText = "歌曲名：" + data[0] + "\n艺术家：" + data[1] + "\n歌曲封面：" + data[2];
+document.getElementById('imgbox').style.visibility="visible";
+document.getElementById('imgbox').src=imgurl;
+netease2.innerText = "歌词：\n" + data[5] + "\n歌词翻译(如果有的话)：\n" + data[6];
+document.getElementById('playonline').style.visibility="visible";
+
+  })
+  .catch(function (err) {
+    document.getElementById('163player').innerText = "请求错误，乐曲不存在或者版权受限";
+    document.getElementById('imgbox').style.visibility="hidden";
+    document.getElementById('imgbox').src="";
+    netease2.innerText ="";
+document.getElementById('playonline').style.visibility="hidden";
+  })
+}
+
+function inputclk()
+{
+if (document.getElementById('field1').value=="请输入歌曲的网易云id")
+document.getElementById('field1').value="";
+}
+
+function playclk()
+{
+window.open(songurl);
+}
+
+</script>
